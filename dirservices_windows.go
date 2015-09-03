@@ -27,7 +27,7 @@ var (
 
 func GetSiteName(computerName string) (siteName string, err error) {
 	var cnp, snp *uint16
-	if len(siteName) == 0 {
+	if len(computerName) == 0 {
 		cnp = nil
 	} else {
 		cnp, err = syscall.UTF16PtrFromString(computerName)
