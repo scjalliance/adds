@@ -1,6 +1,9 @@
 package adds
 
-import "syscall"
+import (
+	"syscall"
+	"unsafe"
+)
 
 var (
 	modnetapi32 = syscall.NewLazyDLL("netapi32.dll")
@@ -21,3 +24,37 @@ var (
 	procDsRoleGetPrimaryDomainInformation = modnetapi32.NewProc("DsRoleGetPrimaryDomainInformation")
 	procDsValidateSubnetNameW             = modnetapi32.NewProc("DsValidateSubnetNameW")
 )
+
+func GetSiteName(computerName string) (siteName string, err error) {
+	var cnp, snp *uint16
+	if len(siteName) == 0 {
+		cnp = nil
+	} else {
+		cnp, err = syscall.UTF16PtrFromString(computerName)
+		if err != nil {
+			return
+		}
+	}
+	snp, err = DsGetSiteName(cnp)
+	if err != nil {
+
+		panic(err)
+		return
+	}
+	defer syscall.NetApiBufferFree((*byte)(unsafe.Pointer(snp)))
+	siteName = syscall.UTF16ToString((*[256]uint16)(unsafe.Pointer(snp))[:]) // Assumes max site name length of 256 characters
+	return
+}
+
+func DsGetSiteName(computerName *uint16) (siteName *uint16, err error) {
+	// See https://msdn.microsoft.com/en-us/library/ms675992
+	r1, _, e1 := syscall.Syscall(procDsGetSiteNameW.Addr(), 2, uintptr(unsafe.Pointer(computerName)), uintptr(unsafe.Pointer(&siteName)), 0)
+	if r1 != 0 {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
