@@ -37,8 +37,6 @@ func GetSiteName(computerName string) (siteName string, err error) {
 	}
 	snp, err = DsGetSiteName(cnp)
 	if err != nil {
-
-		panic(err)
 		return
 	}
 	defer syscall.NetApiBufferFree((*byte)(unsafe.Pointer(snp)))
@@ -48,13 +46,9 @@ func GetSiteName(computerName string) (siteName string, err error) {
 
 func DsGetSiteName(computerName *uint16) (siteName *uint16, err error) {
 	// See https://msdn.microsoft.com/en-us/library/ms675992
-	r1, _, e1 := syscall.Syscall(procDsGetSiteNameW.Addr(), 2, uintptr(unsafe.Pointer(computerName)), uintptr(unsafe.Pointer(&siteName)), 0)
-	if r1 != 0 {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
+	r0, _, _ := syscall.Syscall(procDsGetSiteNameW.Addr(), 2, uintptr(unsafe.Pointer(computerName)), uintptr(unsafe.Pointer(&siteName)), 0)
+	if r0 != 0 {
+		err = syscall.Errno(r0)
 	}
 	return
 }
