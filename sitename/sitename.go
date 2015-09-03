@@ -11,12 +11,14 @@ func main() {
 	if len(os.Args) < 2 {
 		lookup("")
 	} else {
-		for _, arg := range os.Args[1:] {
-			siteName, err := adds.GetSiteName(arg)
+		for _, computerName := range os.Args[1:] {
+			fmt.Printf("%v: ", computerName)
+			siteName, err := adds.GetSiteName(computerName)
 			if err != nil {
-				panic(err)
+				fmt.Printf("%v\n", err)
+			} else {
+				fmt.Printf("%v\n", siteName)
 			}
-			fmt.Println(siteName)
 		}
 	}
 }
